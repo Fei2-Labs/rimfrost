@@ -15,9 +15,9 @@ use commands::handle_slash_command;
 use compat_harness::{extract_manifest, UpstreamPaths};
 use render::{Spinner, TerminalRenderer};
 use runtime::{
-    load_system_prompt, ApiClient, ApiRequest, AssistantEvent, CompactionConfig, ContentBlock,
-    ConversationMessage, ConversationRuntime, MessageRole, PermissionMode, PermissionPolicy,
-    RuntimeError, Session, TokenUsage, ToolError, ToolExecutor,
+    estimate_session_tokens, load_system_prompt, ApiClient, ApiRequest, AssistantEvent,
+    CompactionConfig, ContentBlock, ConversationMessage, ConversationRuntime, MessageRole,
+    PermissionMode, PermissionPolicy, RuntimeError, Session, TokenUsage, ToolError, ToolExecutor,
 };
 use tools::{execute_tool, mvp_tool_specs};
 
@@ -82,7 +82,7 @@ fn parse_args(args: &[String]) -> Result<CliAction, String> {
                 let value = args
                     .get(index + 1)
                     .ok_or_else(|| "missing value for --model".to_string())?;
-                model = value.clone();
+                model.clone_from(value);
                 index += 2;
             }
             flag if flag.starts_with("--model=") => {
@@ -299,13 +299,14 @@ impl LiveCli {
         )?;
         let result = self.runtime.run_turn(input, None);
         match result {
-            Ok(_) => {
+            Ok(turn) => {
                 spinner.finish(
                     "Claude response complete",
                     TerminalRenderer::new().color_theme(),
                     &mut stdout,
                 )?;
                 println!();
+                self.print_turn_usage(turn.usage);
                 Ok(())
             }
             Err(error) => {
@@ -322,24 +323,53 @@ impl LiveCli {
     fn print_status(&self) {
         let usage = self.runtime.usage().cumulative_usage();
         println!(
-            "status: messages={} turns={} input_tokens={} output_tokens={}",
+            "status: messages={} turns={} estimated_session_tokens={}",
             self.runtime.session().messages.len(),
             self.runtime.usage().turns(),
-            usage.input_tokens,
-            usage.output_tokens
+            self.runtime.estimated_tokens()
         );
+        for line in usage.summary_lines("usage") {
+            println!("{line}");
+        }
+    }
+
+    fn print_turn_usage(&self, cumulative_usage: TokenUsage) {
+        let latest = self.runtime.usage().current_turn_usage();
+        println!("\nTurn usage:");
+        for line in latest.summary_lines("  latest") {
+            println!("{line}");
+        }
+        println!("Cumulative usage:");
+        for line in cumulative_usage.summary_lines("  total") {
+            println!("{line}");
+        }
     }
 
     fn compact(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let estimated_before = self.runtime.estimated_tokens();
         let result = self.runtime.compact(CompactionConfig::default());
         let removed = result.removed_message_count;
+        let estimated_after = estimate_session_tokens(&result.compacted_session);
+        let formatted_summary = result.formatted_summary.clone();
+        let compacted_session = result.compacted_session;
+
         self.runtime = build_runtime(
-            result.compacted_session,
+            compacted_session,
             self.model.clone(),
             self.system_prompt.clone(),
             true,
         )?;
-        println!("Compacted {removed} messages.");
+
+        if removed == 0 {
+            println!("Compaction skipped: session is below the compaction threshold.");
+        } else {
+            println!("Compacted {removed} messages into a resumable system summary.");
+            if !formatted_summary.is_empty() {
+                println!("\n{formatted_summary}");
+            }
+            let estimated_saved = estimated_before.saturating_sub(estimated_after);
+            println!("Estimated tokens saved: {estimated_saved}");
+        }
         Ok(())
     }
 }
@@ -388,6 +418,7 @@ impl AnthropicRuntimeClient {
 }
 
 impl ApiClient for AnthropicRuntimeClient {
+    #[allow(clippy::too_many_lines)]
     fn stream(&mut self, request: ApiRequest) -> Result<Vec<AssistantEvent>, RuntimeError> {
         let message_request = MessageRequest {
             model: self.model.clone(),
@@ -442,7 +473,7 @@ impl ApiClient for AnthropicRuntimeClient {
                         ContentBlockDelta::TextDelta { text } => {
                             if !text.is_empty() {
                                 write!(stdout, "{text}")
-                                    .and_then(|_| stdout.flush())
+                                    .and_then(|()| stdout.flush())
                                     .map_err(|error| RuntimeError::new(error.to_string()))?;
                                 events.push(AssistantEvent::TextDelta(text));
                             }
@@ -512,7 +543,7 @@ fn push_output_block(
         OutputContentBlock::Text { text } => {
             if !text.is_empty() {
                 write!(out, "{text}")
-                    .and_then(|_| out.flush())
+                    .and_then(|()| out.flush())
                     .map_err(|error| RuntimeError::new(error.to_string()))?;
                 events.push(AssistantEvent::TextDelta(text));
             }

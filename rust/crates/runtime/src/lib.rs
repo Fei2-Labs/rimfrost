@@ -38,4 +38,4 @@ pub use prompt::{
     SystemPromptBuilder, FRONTIER_MODEL_NAME, SYSTEM_PROMPT_DYNAMIC_BOUNDARY,
 };
 pub use session::{ContentBlock, ConversationMessage, MessageRole, Session, SessionError};
-pub use usage::{TokenUsage, UsageTracker};
+pub use usage::{format_usd, TokenUsage, UsageCostEstimate, UsageTracker};

@@ -158,7 +158,10 @@ impl AnthropicClient {
             .header("anthropic-version", ANTHROPIC_VERSION)
             .header("content-type", "application/json");
 
-        let auth_header = self.auth_token.as_ref().map(|_| "Bearer [REDACTED]").unwrap_or("<absent>");
+        let auth_header = self
+            .auth_token
+            .as_ref()
+            .map_or("<absent>", |_| "Bearer [REDACTED]");
         eprintln!("[anthropic-client] headers x-api-key=[REDACTED] authorization={auth_header} anthropic-version={ANTHROPIC_VERSION} content-type=application/json");
 
         if let Some(auth_token) = &self.auth_token {
@@ -192,8 +195,7 @@ fn read_api_key() -> Result<String, ApiError> {
         Ok(_) => Err(ApiError::MissingApiKey),
         Err(std::env::VarError::NotPresent) => match std::env::var("ANTHROPIC_AUTH_TOKEN") {
             Ok(api_key) if !api_key.is_empty() => Ok(api_key),
-            Ok(_) => Err(ApiError::MissingApiKey),
-            Err(std::env::VarError::NotPresent) => Err(ApiError::MissingApiKey),
+            Ok(_) | Err(std::env::VarError::NotPresent) => Err(ApiError::MissingApiKey),
             Err(error) => Err(ApiError::from(error)),
         },
         Err(error) => Err(ApiError::from(error)),

@@ -18,6 +18,7 @@ impl Default for CompactionConfig {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CompactionResult {
     pub summary: String,
+    pub formatted_summary: String,
     pub compacted_session: Session,
     pub removed_message_count: usize,
 }
@@ -75,6 +76,7 @@ pub fn compact_session(session: &Session, config: CompactionConfig) -> Compactio
     if !should_compact(session, config) {
         return CompactionResult {
             summary: String::new(),
+            formatted_summary: String::new(),
             compacted_session: session.clone(),
             removed_message_count: 0,
         };
@@ -87,6 +89,7 @@ pub fn compact_session(session: &Session, config: CompactionConfig) -> Compactio
     let removed = &session.messages[..keep_from];
     let preserved = session.messages[keep_from..].to_vec();
     let summary = summarize_messages(removed);
+    let formatted_summary = format_compact_summary(&summary);
     let continuation = get_compact_continuation_message(&summary, true, !preserved.is_empty());
 
     let mut compacted_messages = vec![ConversationMessage {
@@ -98,6 +101,7 @@ pub fn compact_session(session: &Session, config: CompactionConfig) -> Compactio
 
     CompactionResult {
         summary,
+        formatted_summary,
         compacted_session: Session {
             version: session.version,
             messages: compacted_messages,
@@ -107,7 +111,48 @@ pub fn compact_session(session: &Session, config: CompactionConfig) -> Compactio
 }
 
 fn summarize_messages(messages: &[ConversationMessage]) -> String {
-    let mut lines = vec!["<summary>".to_string(), "Conversation summary:".to_string()];
+    let user_messages = messages
+        .iter()
+        .filter(|message| message.role == MessageRole::User)
+        .count();
+    let assistant_messages = messages
+        .iter()
+        .filter(|message| message.role == MessageRole::Assistant)
+        .count();
+    let tool_messages = messages
+        .iter()
+        .filter(|message| message.role == MessageRole::Tool)
+        .count();
+
+    let mut tool_names = messages
+        .iter()
+        .flat_map(|message| message.blocks.iter())
+        .filter_map(|block| match block {
+            ContentBlock::ToolUse { name, .. } => Some(name.as_str()),
+            ContentBlock::ToolResult { tool_name, .. } => Some(tool_name.as_str()),
+            ContentBlock::Text { .. } => None,
+        })
+        .collect::<Vec<_>>();
+    tool_names.sort_unstable();
+    tool_names.dedup();
+
+    let mut lines = vec![
+        "<summary>".to_string(),
+        "Conversation summary:".to_string(),
+        format!(
+            "- Scope: {} earlier messages compacted (user={}, assistant={}, tool={}).",
+            messages.len(),
+            user_messages,
+            assistant_messages,
+            tool_messages
+        ),
+    ];
+
+    if !tool_names.is_empty() {
+        lines.push(format!("- Tools mentioned: {}.", tool_names.join(", ")));
+    }
+
+    lines.push("- Key timeline:".to_string());
     for message in messages {
         let role = match message.role {
             MessageRole::System => "system",
@@ -121,7 +166,7 @@ fn summarize_messages(messages: &[ConversationMessage]) -> String {
             .map(summarize_block)
             .collect::<Vec<_>>()
             .join(" | ");
-        lines.push(format!("- {role}: {content}"));
+        lines.push(format!("  - {role}: {content}"));
     }
     lines.push("</summary>".to_string());
     lines.join("\n")
@@ -229,6 +274,7 @@ mod tests {
         assert_eq!(result.removed_message_count, 0);
         assert_eq!(result.compacted_session, session);
         assert!(result.summary.is_empty());
+        assert!(result.formatted_summary.is_empty());
     }
 
     #[test]
@@ -268,6 +314,8 @@ mod tests {
             &result.compacted_session.messages[0].blocks[0],
             ContentBlock::Text { text } if text.contains("Summary:")
         ));
+        assert!(result.formatted_summary.contains("Scope:"));
+        assert!(result.formatted_summary.contains("Key timeline:"));
         assert!(should_compact(
             &session,
             CompactionConfig {
