@@ -1,12 +1,14 @@
 __pycache__/
 archive/
 .omx/
-.clawd-agents/
+.rimfrostd-agents/
 # Claude Code local artifacts
 .claude/settings.local.json
 .claude/sessions/
-# Claw Code local artifacts
-.claw/settings.local.json
-.claw/sessions/
+# RimFrost local artifacts
+.rimfrost/settings.local.json
+.rimfrost/sessions/
 .clawhip/
 status-help.txt
+AGENTS.md
+.DS_Store

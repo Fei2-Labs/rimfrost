@@ -526,7 +526,7 @@ mod tests {
 
     #[test]
     fn qwen_prefix_routes_to_dashscope_not_anthropic() {
-        // User request from Discord #clawcode-get-help: web3g wants to use
+        // User request from Discord #rimfrost-get-help: web3g wants to use
         // Qwen 3.6 Plus via native Alibaba DashScope API (not OpenRouter,
         // which has lower rate limits). metadata_for_model must route
         // qwen/* and bare qwen-* to the OpenAi provider kind pointed at
@@ -569,8 +569,8 @@ mod tests {
             .as_nanos();
         let root = std::env::temp_dir().join(format!("api-plugin-max-tokens-{nanos}"));
         let cwd = root.join("project");
-        let home = root.join("home").join(".claw");
-        std::fs::create_dir_all(cwd.join(".claw")).expect("project config dir");
+        let home = root.join("home").join(".rimfrost");
+        std::fs::create_dir_all(cwd.join(".rimfrost")).expect("project config dir");
         std::fs::create_dir_all(&home).expect("home config dir");
         std::fs::write(
             home.join("settings.json"),

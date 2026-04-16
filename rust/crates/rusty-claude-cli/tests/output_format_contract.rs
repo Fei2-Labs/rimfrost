@@ -80,7 +80,7 @@ fn inventory_commands_emit_structured_json_when_requested() {
         &[
             ("HOME", isolated_home.to_str().expect("utf8 home")),
             (
-                "CLAW_CONFIG_HOME",
+                "RIMFROST_CONFIG_HOME",
                 isolated_config.to_str().expect("utf8 config home"),
             ),
             (
@@ -145,7 +145,7 @@ fn agents_command_emits_structured_agent_entries_when_requested() {
         &[
             ("HOME", home.to_str().expect("utf8 home")),
             (
-                "CLAW_CONFIG_HOME",
+                "RIMFROST_CONFIG_HOME",
                 isolated_config.to_str().expect("utf8 config home"),
             ),
             (
@@ -255,11 +255,11 @@ fn doctor_and_resume_status_emit_json_when_requested() {
         .expect("install source check");
     assert_eq!(
         install_source["official_repo"],
-        "https://github.com/ultraworkers/claw-code"
+        "https://github.com/Fei2-Labs/rimfrost"
     );
     assert_eq!(
         install_source["deprecated_install"],
-        "cargo install claw-code"
+        "cargo install rimfrost"
     );
 
     let workspace = checks
@@ -317,7 +317,7 @@ fn resumed_inventory_commands_emit_structured_json_when_requested() {
         ],
         &[
             (
-                "CLAW_CONFIG_HOME",
+                "RIMFROST_CONFIG_HOME",
                 config_home.to_str().expect("utf8 config home"),
             ),
             ("HOME", home.to_str().expect("utf8 home")),
@@ -338,7 +338,7 @@ fn resumed_inventory_commands_emit_structured_json_when_requested() {
         ],
         &[
             (
-                "CLAW_CONFIG_HOME",
+                "RIMFROST_CONFIG_HOME",
                 config_home.to_str().expect("utf8 config home"),
             ),
             ("HOME", home.to_str().expect("utf8 home")),
@@ -409,7 +409,7 @@ fn run_claw(current_dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> Output 
 }
 
 fn write_upstream_fixture(root: &Path) -> PathBuf {
-    let upstream = root.join("claw-code");
+    let upstream = root.join("rimfrost");
     let src = upstream.join("src");
     let entrypoints = src.join("entrypoints");
     fs::create_dir_all(&entrypoints).expect("upstream entrypoints dir should exist");

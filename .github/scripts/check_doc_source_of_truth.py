@@ -17,12 +17,12 @@ FILES = [
 FILES.extend(sorted((ROOT / 'docs').rglob('*.md')) if (ROOT / 'docs').exists() else [])
 
 FORBIDDEN = {
-    r'github\.com/Yeachan-Heo/claw-code(?!-parity)': 'replace old claw-code GitHub links with ultraworkers/claw-code',
-    r'github\.com/code-yeongyu/claw-code': 'replace stale alternate claw-code GitHub links with ultraworkers/claw-code',
-    r'discord\.gg/6ztZB9jvWq': 'replace the stale UltraWorkers Discord invite with the current invite',
-    r'api\.star-history\.com/svg\?repos=Yeachan-Heo/claw-code': 'update star-history embeds to ultraworkers/claw-code',
-    r'star-history\.com/#Yeachan-Heo/claw-code': 'update star-history links to ultraworkers/claw-code',
-    r'assets/clawd-hero\.jpeg': 'rename stale hero asset references to assets/claw-hero.jpeg',
+    r'github\.com/Yeachan-Heo/rimfrost(?!-parity)': 'replace old rimfrost GitHub links with Fei2-Labs/rimfrost',
+    r'github\.com/code-yeongyu/rimfrost': 'replace stale alternate rimfrost GitHub links with Fei2-Labs/rimfrost',
+    r'discord\.gg/6ztZB9jvWq': 'replace the stale Fei2-Labs Discord invite with the current invite',
+    r'api\.star-history\.com/svg\?repos=Yeachan-Heo/rimfrost': 'update star-history embeds to Fei2-Labs/rimfrost',
+    r'star-history\.com/#Yeachan-Heo/rimfrost': 'update star-history links to Fei2-Labs/rimfrost',
+    r'assets/rimfrost-hero\.jpeg': 'rename stale hero asset references to assets/rimfrost-hero.jpeg',
     r'assets/instructkr\.png': 'remove stale instructkr image references',
 }
 

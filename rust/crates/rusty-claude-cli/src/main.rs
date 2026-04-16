@@ -78,9 +78,9 @@ const INTERNAL_PROGRESS_HEARTBEAT_INTERVAL: Duration = Duration::from_secs(3);
 const POST_TOOL_STALL_TIMEOUT: Duration = Duration::from_secs(10);
 const PRIMARY_SESSION_EXTENSION: &str = "jsonl";
 const LEGACY_SESSION_EXTENSION: &str = "json";
-const OFFICIAL_REPO_URL: &str = "https://github.com/ultraworkers/claw-code";
-const OFFICIAL_REPO_SLUG: &str = "ultraworkers/claw-code";
-const DEPRECATED_INSTALL_COMMAND: &str = "cargo install claw-code";
+const OFFICIAL_REPO_URL: &str = "https://github.com/Fei2-Labs/rimfrost";
+const OFFICIAL_REPO_SLUG: &str = "Fei2-Labs/rimfrost";
+const DEPRECATED_INSTALL_COMMAND: &str = "cargo install rimfrost";
 const LATEST_SESSION_REFERENCE: &str = "latest";
 const SESSION_REFERENCE_ALIASES: &[&str] = &[LATEST_SESSION_REFERENCE, "last", "recent"];
 const CLI_OPTION_SUGGESTIONS: &[&str] = &[
@@ -127,13 +127,13 @@ fn main() {
                     "error": message,
                 })
             );
-        } else if message.contains("`claw --help`") {
+        } else if message.contains("`rimfrost --help`") {
             eprintln!("error: {message}");
         } else {
             eprintln!(
                 "error: {message}
 
-Run `claw --help` for usage."
+Run `rimfrost --help` for usage."
             );
         }
         std::process::exit(1);
@@ -431,7 +431,7 @@ fn parse_args(args: &[String]) -> Result<CliAction, String> {
                     ) =>
             {
                 // `--help` following a subcommand that would otherwise forward
-                // the arg to the API (e.g. `claw prompt --help`) should show
+                // the arg to the API (e.g. `rimfrost prompt --help`) should show
                 // top-level help instead. Subcommands that consume their own
                 // args (agents, mcp, plugins, skills) and local help-topic
                 // subcommands (status, sandbox, doctor) must NOT be intercepted
@@ -522,7 +522,7 @@ fn parse_args(args: &[String]) -> Result<CliAction, String> {
                 index += 1;
             }
             "-p" => {
-                // Claw Code compat: -p "prompt" = one-shot prompt
+                // RimFrost compat: -p "prompt" = one-shot prompt
                 let prompt = args[index + 1..].join(" ");
                 if prompt.trim().is_empty() {
                     return Err("-p requires a prompt string".to_string());
@@ -541,7 +541,7 @@ fn parse_args(args: &[String]) -> Result<CliAction, String> {
                 });
             }
             "--print" => {
-                // Claw Code compat: --print makes output non-interactive
+                // RimFrost compat: --print makes output non-interactive
                 output_format = CliOutputFormat::Text;
                 index += 1;
             }
@@ -782,11 +782,11 @@ fn bare_slash_command_guidance(command_name: &str) -> Option<String> {
         .find(|spec| spec.name == command_name)?;
     let guidance = if slash_command.resume_supported {
         format!(
-            "`claw {command_name}` is a slash command. Use `claw --resume SESSION.jsonl /{command_name}` or start `claw` and run `/{command_name}`."
+            "`rimfrost {command_name}` is a slash command. Use `rimfrost --resume SESSION.jsonl /{command_name}` or start `rimfrost` and run `/{command_name}`."
         )
     } else {
         format!(
-            "`claw {command_name}` is a slash command. Start `claw` and run `/{command_name}` inside the REPL."
+            "`rimfrost {command_name}` is a slash command. Start `rimfrost` and run `/{command_name}` inside the REPL."
         )
     };
     Some(guidance)
@@ -794,7 +794,7 @@ fn bare_slash_command_guidance(command_name: &str) -> Option<String> {
 
 fn removed_auth_surface_error(command_name: &str) -> String {
     format!(
-        "`claw {command_name}` has been removed. Set ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN instead."
+        "`rimfrost {command_name}` has been removed. Set ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN instead."
     )
 }
 
@@ -803,7 +803,7 @@ fn parse_acp_args(args: &[String], output_format: CliOutputFormat) -> Result<Cli
         [] => Ok(CliAction::Acp { output_format }),
         [subcommand] if subcommand == "serve" => Ok(CliAction::Acp { output_format }),
         _ => Err(String::from(
-            "unsupported ACP invocation. Use `claw acp`, `claw acp serve`, `claw --acp`, or `claw -acp`.",
+            "unsupported ACP invocation. Use `rimfrost acp`, `rimfrost acp serve`, `rimfrost --acp`, or `rimfrost -acp`.",
         )),
     }
 }
@@ -881,7 +881,7 @@ fn parse_direct_slash_cli_action(
         Ok(Some(command)) => Err({
             let _ = command;
             format!(
-                "slash command {command_name} is interactive-only. Start `claw` and run it there, or use `claw --resume SESSION.jsonl {command_name}` / `claw --resume {latest} {command_name}` when the command is marked [resume] in /help.",
+                "slash command {command_name} is interactive-only. Start `rimfrost` and run it there, or use `rimfrost --resume SESSION.jsonl {command_name}` / `rimfrost --resume {latest} {command_name}` when the command is marked [resume] in /help.",
                 command_name = rest[0],
                 latest = LATEST_SESSION_REFERENCE,
             )
@@ -898,7 +898,7 @@ fn format_unknown_option(option: &str) -> String {
         message.push_str(suggestion);
         message.push('?');
     }
-    message.push_str("\nRun `claw --help` for usage.");
+    message.push_str("\nRun `rimfrost --help` for usage.");
     message
 }
 
@@ -913,7 +913,7 @@ fn format_unknown_direct_slash_command(name: &str) -> String {
         message.push('\n');
         message.push_str(note);
     }
-    message.push_str("\nRun `claw --help` for CLI usage, or start `claw` and use /help.");
+    message.push_str("\nRun `rimfrost --help` for CLI usage, or start `rimfrost` and use /help.");
     message
 }
 
@@ -935,7 +935,7 @@ fn format_unknown_slash_command(name: &str) -> String {
 fn omc_compatibility_note_for_unknown_slash_command(name: &str) -> Option<&'static str> {
     name.starts_with("oh-my-claudecode:")
         .then_some(
-            "Compatibility note: `/oh-my-claudecode:*` is a Claude Code/OMC plugin command. `claw` does not yet load plugin slash commands, Claude statusline stdin, or OMC session hooks.",
+            "Compatibility note: `/oh-my-claudecode:*` is a Claude Code/OMC plugin command. `rimfrost` does not yet load plugin slash commands, Claude statusline stdin, or OMC session hooks.",
         )
 }
 
@@ -1531,13 +1531,13 @@ fn run_doctor(output_format: CliOutputFormat) -> Result<(), Box<dyn std::error::
 ///
 /// Tool descriptors come from [`tools::mvp_tool_specs`] and calls are
 /// dispatched through [`tools::execute_tool`], so this server exposes exactly
-/// Read `.claw/worker-state.json` from the current working directory and print it.
+/// Read `.rimfrost/worker-state.json` from the current working directory and print it.
 /// This is the file-based worker observability surface: `push_event()` in `worker_boot.rs`
 /// atomically writes state transitions here so external observers (clawhip, orchestrators)
 /// can poll current `WorkerStatus` without needing an HTTP route on the opencode binary.
 fn run_worker_state(output_format: CliOutputFormat) -> Result<(), Box<dyn std::error::Error>> {
     let cwd = env::current_dir()?;
-    let state_path = cwd.join(".claw").join("worker-state.json");
+    let state_path = cwd.join(".rimfrost").join("worker-state.json");
     if !state_path.exists() {
         // Emit a structured error, then return Err so the process exits 1.
         // Callers (scripts, CI) need a non-zero exit to detect "no state" without
@@ -1576,7 +1576,7 @@ fn run_mcp_serve() -> Result<(), Box<dyn std::error::Error>> {
         .collect();
 
     let spec = McpServerSpec {
-        server_name: "claw".to_string(),
+        server_name: "rimfrost".to_string(),
         server_version: VERSION.to_string(),
         tools,
         tool_handler: Box::new(execute_tool),
@@ -1642,7 +1642,7 @@ fn check_auth_health() -> DiagnosticCheck {
                     token_set.scopes.join(",")
                 }
             ),
-            "Suggested action  set ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN; `claw login` is removed"
+            "Suggested action  set ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN; `rimfrost login` is removed"
                 .to_string(),
         ])
         .with_data(Map::from_iter([
@@ -1804,7 +1804,7 @@ fn check_install_source_health() -> DiagnosticCheck {
         "Recommended path  build from this repo or use the upstream binary documented in README.md"
             .to_string(),
         format!(
-            "Deprecated crate  `{DEPRECATED_INSTALL_COMMAND}` installs a deprecated stub and does not provide the `claw` binary"
+            "Deprecated crate  `{DEPRECATED_INSTALL_COMMAND}` installs a deprecated stub and does not provide the `rimfrost` binary"
         )
             .to_string(),
     ])
@@ -2018,7 +2018,7 @@ fn dump_manifests(
 }
 
 const DUMP_MANIFESTS_OVERRIDE_HINT: &str =
-    "Hint: set CLAUDE_CODE_UPSTREAM=/path/to/upstream or pass `claw dump-manifests --manifests-dir /path/to/upstream`.";
+    "Hint: set CLAUDE_CODE_UPSTREAM=/path/to/upstream or pass `rimfrost dump-manifests --manifests-dir /path/to/upstream`.";
 
 // Internal function for testing that accepts a workspace directory path.
 fn dump_manifests_at_path(
@@ -2498,7 +2498,7 @@ fn render_resume_usage() -> String {
     format!(
         "Resume
   Usage            /resume <session-path|session-id|{LATEST_SESSION_REFERENCE}>
-  Auto-save        .claw/sessions/<session-id>.{PRIMARY_SESSION_EXTENSION}
+  Auto-save        .rimfrost/sessions/<session-id>.{PRIMARY_SESSION_EXTENSION}
   Tip              use /session list to inspect saved sessions"
     )
 }
@@ -2696,7 +2696,7 @@ fn run_resume_command(
             Ok(ResumeCommandOutcome {
                 session: cleared,
                 message: Some(format!(
-                    "Session cleared\n  Mode             resumed session reset\n  Previous session {previous_session_id}\n  Backup           {}\n  Resume previous  claw --resume {}\n  New session      {new_session_id}\n  Session file     {}",
+                    "Session cleared\n  Mode             resumed session reset\n  Previous session {previous_session_id}\n  Backup           {}\n  Resume previous  rimfrost --resume {}\n  New session      {new_session_id}\n  Session file     {}",
                     backup_path.display(),
                     backup_path.display(),
                     session_path.display()
@@ -2851,7 +2851,7 @@ fn run_resume_command(
         SlashCommand::Skills { args } => {
             if let SkillSlashDispatch::Invoke(_) = classify_skills_slash_command(args.as_deref()) {
                 return Err(
-                    "resumed /skills invocations are interactive-only; start `claw` and run `/skills <skill>` in the REPL".into(),
+                    "resumed /skills invocations are interactive-only; start `rimfrost` and run `/skills <skill>` in the REPL".into(),
                 );
             }
             let cwd = env::current_dir()?;
@@ -4331,7 +4331,7 @@ impl LiveCli {
         args: Option<&str>,
         output_format: CliOutputFormat,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        // `claw mcp serve` starts a stdio MCP server exposing claw's built-in
+        // `rimfrost mcp serve` starts a stdio MCP server exposing claw's built-in
         // tools. All other `mcp` subcommands fall through to the existing
         // configured-server reporter (`list`, `status`, ...).
         if matches!(args.map(str::trim), Some("serve")) {
@@ -4880,7 +4880,7 @@ fn render_repl_help() -> String {
         "  Tab                  Complete commands, modes, and recent sessions".to_string(),
         "  Ctrl-C               Clear input (or exit on empty prompt)".to_string(),
         "  Shift+Enter/Ctrl+J   Insert a newline".to_string(),
-        "  Auto-save            .claw/sessions/<session-id>.jsonl".to_string(),
+        "  Auto-save            .rimfrost/sessions/<session-id>.jsonl".to_string(),
         "  Resume latest        /resume latest".to_string(),
         "  Browse sessions      /session list".to_string(),
         "  Show prompt history  /history [count]".to_string(),
@@ -4955,7 +4955,7 @@ fn status_json_value(
             "session": context.session_path.as_ref().map_or_else(|| "live-repl".to_string(), |path| path.display().to_string()),
             "session_id": context.session_path.as_ref().and_then(|path| {
                 // Session files are named <session-id>.jsonl directly under
-                // .claw/sessions/. Extract the stem (drop the .jsonl extension).
+                // .rimfrost/sessions/. Extract the stem (drop the .jsonl extension).
                 path.file_stem().map(|n| n.to_string_lossy().into_owned())
             }),
             "loaded_config_files": context.loaded_config_files,
@@ -5181,29 +5181,29 @@ fn sandbox_json_value(status: &runtime::SandboxStatus) -> serde_json::Value {
 fn render_help_topic(topic: LocalHelpTopic) -> String {
     match topic {
         LocalHelpTopic::Status => "Status
-  Usage            claw status
+  Usage            rimfrost status
   Purpose          show the local workspace snapshot without entering the REPL
   Output           model, permissions, git state, config files, and sandbox status
-  Related          /status · claw --resume latest /status"
+  Related          /status · rimfrost --resume latest /status"
             .to_string(),
         LocalHelpTopic::Sandbox => "Sandbox
-  Usage            claw sandbox
+  Usage            rimfrost sandbox
   Purpose          inspect the resolved sandbox and isolation state for the current directory
   Output           namespace, network, filesystem, and fallback details
-  Related          /sandbox · claw status"
+  Related          /sandbox · rimfrost status"
             .to_string(),
         LocalHelpTopic::Doctor => "Doctor
-  Usage            claw doctor
+  Usage            rimfrost doctor
   Purpose          diagnose local auth, config, workspace, sandbox, and build metadata
   Output           local-only health report; no provider request or session resume required
-  Related          /doctor · claw --resume latest /doctor"
+  Related          /doctor · rimfrost --resume latest /doctor"
             .to_string(),
         LocalHelpTopic::Acp => "ACP / Zed
-  Usage            claw acp [serve]
-  Aliases          claw --acp · claw -acp
+  Usage            rimfrost acp [serve]
+  Aliases          rimfrost --acp · rimfrost -acp
   Purpose          explain the current editor-facing ACP/Zed launch contract without starting the runtime
   Status           discoverability only; `serve` is a status alias and does not launch a daemon yet
-  Related          ROADMAP #64a (discoverability) · ROADMAP #76 (real ACP support) · claw --help"
+  Related          ROADMAP #64a (discoverability) · ROADMAP #76 (real ACP support) · rimfrost --help"
             .to_string(),
     }
 }
@@ -5213,11 +5213,11 @@ fn print_help_topic(topic: LocalHelpTopic) {
 }
 
 fn print_acp_status(output_format: CliOutputFormat) -> Result<(), Box<dyn std::error::Error>> {
-    let message = "ACP/Zed editor integration is not implemented in claw-code yet. `claw acp serve` is only a discoverability alias today; it does not launch a daemon or Zed-specific protocol endpoint. Use the normal terminal surfaces for now and track ROADMAP #76 for real ACP support.";
+    let message = "ACP/Zed editor integration is not implemented in rimfrost yet. `rimfrost acp serve` is only a discoverability alias today; it does not launch a daemon or Zed-specific protocol endpoint. Use the normal terminal surfaces for now and track ROADMAP #76 for real ACP support.";
     match output_format {
         CliOutputFormat::Text => {
             println!(
-                "ACP / Zed\n  Status           discoverability only\n  Launch           `claw acp serve` / `claw --acp` / `claw -acp` report status only; no editor daemon is available yet\n  Today            use `claw prompt`, the REPL, or `claw doctor` for local verification\n  Tracking         ROADMAP #76\n  Message          {message}"
+                "ACP / Zed\n  Status           discoverability only\n  Launch           `rimfrost acp serve` / `rimfrost --acp` / `rimfrost -acp` report status only; no editor daemon is available yet\n  Today            use `rimfrost prompt`, the REPL, or `rimfrost doctor` for local verification\n  Tracking         ROADMAP #76\n  Message          {message}"
             );
         }
         CliOutputFormat::Json => {
@@ -5234,9 +5234,9 @@ fn print_acp_status(output_format: CliOutputFormat) -> Result<(), Box<dyn std::e
                     "discoverability_tracking": "ROADMAP #64a",
                     "tracking": "ROADMAP #76",
                     "recommended_workflows": [
-                        "claw prompt TEXT",
-                        "claw",
-                        "claw doctor"
+                        "rimfrost prompt TEXT",
+                        "rimfrost",
+                        "rimfrost doctor"
                     ],
                 }))?
             );
@@ -5914,7 +5914,7 @@ fn render_version_report() -> String {
     let git_sha = GIT_SHA.unwrap_or("unknown");
     let target = BUILD_TARGET.unwrap_or("unknown");
     format!(
-        "Claw Code\n  Version          {VERSION}\n  Git SHA          {git_sha}\n  Target           {target}\n  Build date       {DEFAULT_DATE}"
+        "RimFrost\n  Version          {VERSION}\n  Git SHA          {git_sha}\n  Target           {target}\n  Build date       {DEFAULT_DATE}"
     )
 }
 
@@ -7153,7 +7153,7 @@ fn format_context_window_blocked_error(session_id: &str, error: &api::ApiError) 
     lines.push("Recovery".to_string());
     lines.push("  Compact          /compact".to_string());
     lines.push(format!(
-        "  Resume compact   claw --resume {session_id} /compact"
+        "  Resume compact   rimfrost --resume {session_id} /compact"
     ));
     lines.push("  Fresh session    /clear --confirm".to_string());
     lines.push(
@@ -8169,7 +8169,7 @@ fn convert_messages(messages: &[ConversationMessage]) -> Vec<InputMessage> {
 
 #[allow(clippy::too_many_lines)]
 fn print_help_to(out: &mut impl Write) -> io::Result<()> {
-    writeln!(out, "claw v{VERSION}")?;
+    writeln!(out, "rimfrost v{VERSION}")?;
     writeln!(out)?;
     writeln!(out, "Usage:")?;
     writeln!(
@@ -8189,29 +8189,29 @@ fn print_help_to(out: &mut impl Write) -> io::Result<()> {
     writeln!(out, "      Shorthand non-interactive prompt mode")?;
     writeln!(
         out,
-        "  claw --resume [SESSION.jsonl|session-id|latest] [/status] [/compact] [...]"
+        "  rimfrost --resume [SESSION.jsonl|session-id|latest] [/status] [/compact] [...]"
     )?;
     writeln!(
         out,
         "      Inspect or maintain a saved session without entering the REPL"
     )?;
-    writeln!(out, "  claw help")?;
+    writeln!(out, "  rimfrost help")?;
     writeln!(out, "      Alias for --help")?;
-    writeln!(out, "  claw version")?;
+    writeln!(out, "  rimfrost version")?;
     writeln!(out, "      Alias for --version")?;
-    writeln!(out, "  claw status")?;
+    writeln!(out, "  rimfrost status")?;
     writeln!(
         out,
         "      Show the current local workspace status snapshot"
     )?;
-    writeln!(out, "  claw sandbox")?;
+    writeln!(out, "  rimfrost sandbox")?;
     writeln!(out, "      Show the current sandbox isolation snapshot")?;
-    writeln!(out, "  claw doctor")?;
+    writeln!(out, "  rimfrost doctor")?;
     writeln!(
         out,
         "      Diagnose local auth, config, workspace, and sandbox health"
     )?;
-    writeln!(out, "  claw acp [serve]")?;
+    writeln!(out, "  rimfrost acp [serve]")?;
     writeln!(
         out,
         "      Show ACP/Zed editor integration status (currently unsupported; aliases: --acp, -acp)"
@@ -8221,16 +8221,16 @@ fn print_help_to(out: &mut impl Write) -> io::Result<()> {
         out,
         "      Warning: do not `{DEPRECATED_INSTALL_COMMAND}` (deprecated stub)"
     )?;
-    writeln!(out, "  claw dump-manifests [--manifests-dir PATH]")?;
-    writeln!(out, "  claw bootstrap-plan")?;
-    writeln!(out, "  claw agents")?;
-    writeln!(out, "  claw mcp")?;
-    writeln!(out, "  claw skills")?;
-    writeln!(out, "  claw system-prompt [--cwd PATH] [--date YYYY-MM-DD]")?;
-    writeln!(out, "  claw init")?;
+    writeln!(out, "  rimfrost dump-manifests [--manifests-dir PATH]")?;
+    writeln!(out, "  rimfrost bootstrap-plan")?;
+    writeln!(out, "  rimfrost agents")?;
+    writeln!(out, "  rimfrost mcp")?;
+    writeln!(out, "  rimfrost skills")?;
+    writeln!(out, "  rimfrost system-prompt [--cwd PATH] [--date YYYY-MM-DD]")?;
+    writeln!(out, "  rimfrost init")?;
     writeln!(
         out,
-        "  claw export [PATH] [--session SESSION] [--output PATH]"
+        "  rimfrost export [PATH] [--session SESSION] [--output PATH]"
     )?;
     writeln!(
         out,
@@ -8280,7 +8280,7 @@ fn print_help_to(out: &mut impl Write) -> io::Result<()> {
     writeln!(out, "Session shortcuts:")?;
     writeln!(
         out,
-        "  REPL turns auto-save to .claw/sessions/<session-id>.{PRIMARY_SESSION_EXTENSION}"
+        "  REPL turns auto-save to .rimfrost/sessions/<session-id>.{PRIMARY_SESSION_EXTENSION}"
     )?;
     writeln!(
         out,
@@ -8291,33 +8291,33 @@ fn print_help_to(out: &mut impl Write) -> io::Result<()> {
         "  Use /session list in the REPL to browse managed sessions"
     )?;
     writeln!(out, "Examples:")?;
-    writeln!(out, "  claw --model claude-opus \"summarize this repo\"")?;
+    writeln!(out, "  rimfrost --model claude-opus \"summarize this repo\"")?;
     writeln!(
         out,
-        "  claw --output-format json prompt \"explain src/main.rs\""
+        "  rimfrost --output-format json prompt \"explain src/main.rs\""
     )?;
-    writeln!(out, "  claw --compact \"summarize Cargo.toml\" | wc -l")?;
+    writeln!(out, "  rimfrost --compact \"summarize Cargo.toml\" | wc -l")?;
     writeln!(
         out,
-        "  claw --allowedTools read,glob \"summarize Cargo.toml\""
+        "  rimfrost --allowedTools read,glob \"summarize Cargo.toml\""
     )?;
-    writeln!(out, "  claw --resume {LATEST_SESSION_REFERENCE}")?;
+    writeln!(out, "  rimfrost --resume {LATEST_SESSION_REFERENCE}")?;
     writeln!(
         out,
-        "  claw --resume {LATEST_SESSION_REFERENCE} /status /diff /export notes.txt"
+        "  rimfrost --resume {LATEST_SESSION_REFERENCE} /status /diff /export notes.txt"
     )?;
-    writeln!(out, "  claw agents")?;
-    writeln!(out, "  claw mcp show my-server")?;
-    writeln!(out, "  claw /skills")?;
-    writeln!(out, "  claw doctor")?;
+    writeln!(out, "  rimfrost agents")?;
+    writeln!(out, "  rimfrost mcp show my-server")?;
+    writeln!(out, "  rimfrost /skills")?;
+    writeln!(out, "  rimfrost doctor")?;
     writeln!(out, "  source of truth: {OFFICIAL_REPO_URL}")?;
     writeln!(
         out,
         "  do not run `{DEPRECATED_INSTALL_COMMAND}` — it installs a deprecated stub"
     )?;
-    writeln!(out, "  claw init")?;
-    writeln!(out, "  claw export")?;
-    writeln!(out, "  claw export conversation.md")?;
+    writeln!(out, "  rimfrost init")?;
+    writeln!(out, "  rimfrost export")?;
+    writeln!(out, "  rimfrost export conversation.md")?;
     Ok(())
 }
 
@@ -8483,7 +8483,7 @@ mod tests {
         );
         assert!(rendered.contains("Compact          /compact"), "{rendered}");
         assert!(
-            rendered.contains("Resume compact   claw --resume session-issue-32 /compact"),
+            rendered.contains("Resume compact   rimfrost --resume session-issue-32 /compact"),
             "{rendered}"
         );
         assert!(
@@ -8554,7 +8554,7 @@ mod tests {
         );
         assert!(rendered.contains("Compact          /compact"), "{rendered}");
         assert!(
-            rendered.contains("Resume compact   claw --resume session-issue-32 /compact"),
+            rendered.contains("Resume compact   rimfrost --resume session-issue-32 /compact"),
             "{rendered}"
         );
     }
@@ -8680,24 +8680,24 @@ mod tests {
         let root = temp_dir();
         let cwd = root.join("project");
         let config_home = root.join("config-home");
-        std::fs::create_dir_all(cwd.join(".claw")).expect("project config dir should exist");
+        std::fs::create_dir_all(cwd.join(".rimfrost")).expect("project config dir should exist");
         std::fs::create_dir_all(&config_home).expect("config home should exist");
         std::fs::write(
-            cwd.join(".claw").join("settings.json"),
+            cwd.join(".rimfrost").join("settings.json"),
             r#"{"permissionMode":"acceptEdits"}"#,
         )
         .expect("project config should write");
 
-        let original_config_home = std::env::var("CLAW_CONFIG_HOME").ok();
+        let original_config_home = std::env::var("RIMFROST_CONFIG_HOME").ok();
         let original_permission_mode = std::env::var("RUSTY_CLAUDE_PERMISSION_MODE").ok();
-        std::env::set_var("CLAW_CONFIG_HOME", &config_home);
+        std::env::set_var("RIMFROST_CONFIG_HOME", &config_home);
         std::env::remove_var("RUSTY_CLAUDE_PERMISSION_MODE");
 
         let resolved = with_current_dir(&cwd, super::default_permission_mode);
 
         match original_config_home {
-            Some(value) => std::env::set_var("CLAW_CONFIG_HOME", value),
-            None => std::env::remove_var("CLAW_CONFIG_HOME"),
+            Some(value) => std::env::set_var("RIMFROST_CONFIG_HOME", value),
+            None => std::env::remove_var("RIMFROST_CONFIG_HOME"),
         }
         match original_permission_mode {
             Some(value) => std::env::set_var("RUSTY_CLAUDE_PERMISSION_MODE", value),
@@ -8714,24 +8714,24 @@ mod tests {
         let root = temp_dir();
         let cwd = root.join("project");
         let config_home = root.join("config-home");
-        std::fs::create_dir_all(cwd.join(".claw")).expect("project config dir should exist");
+        std::fs::create_dir_all(cwd.join(".rimfrost")).expect("project config dir should exist");
         std::fs::create_dir_all(&config_home).expect("config home should exist");
         std::fs::write(
-            cwd.join(".claw").join("settings.json"),
+            cwd.join(".rimfrost").join("settings.json"),
             r#"{"permissionMode":"acceptEdits"}"#,
         )
         .expect("project config should write");
 
-        let original_config_home = std::env::var("CLAW_CONFIG_HOME").ok();
+        let original_config_home = std::env::var("RIMFROST_CONFIG_HOME").ok();
         let original_permission_mode = std::env::var("RUSTY_CLAUDE_PERMISSION_MODE").ok();
-        std::env::set_var("CLAW_CONFIG_HOME", &config_home);
+        std::env::set_var("RIMFROST_CONFIG_HOME", &config_home);
         std::env::set_var("RUSTY_CLAUDE_PERMISSION_MODE", "read-only");
 
         let resolved = with_current_dir(&cwd, super::default_permission_mode);
 
         match original_config_home {
-            Some(value) => std::env::set_var("CLAW_CONFIG_HOME", value),
-            None => std::env::remove_var("CLAW_CONFIG_HOME"),
+            Some(value) => std::env::set_var("RIMFROST_CONFIG_HOME", value),
+            None => std::env::remove_var("RIMFROST_CONFIG_HOME"),
         }
         match original_permission_mode {
             Some(value) => std::env::set_var("RUSTY_CLAUDE_PERMISSION_MODE", value),
@@ -8748,10 +8748,10 @@ mod tests {
         let config_home = temp_dir();
         std::fs::create_dir_all(&config_home).expect("config home should exist");
 
-        let original_config_home = std::env::var("CLAW_CONFIG_HOME").ok();
+        let original_config_home = std::env::var("RIMFROST_CONFIG_HOME").ok();
         let original_api_key = std::env::var("ANTHROPIC_API_KEY").ok();
         let original_auth_token = std::env::var("ANTHROPIC_AUTH_TOKEN").ok();
-        std::env::set_var("CLAW_CONFIG_HOME", &config_home);
+        std::env::set_var("RIMFROST_CONFIG_HOME", &config_home);
         std::env::remove_var("ANTHROPIC_API_KEY");
         std::env::remove_var("ANTHROPIC_AUTH_TOKEN");
 
@@ -8767,8 +8767,8 @@ mod tests {
             .expect_err("saved oauth should be ignored without env auth");
 
         match original_config_home {
-            Some(value) => std::env::set_var("CLAW_CONFIG_HOME", value),
-            None => std::env::remove_var("CLAW_CONFIG_HOME"),
+            Some(value) => std::env::set_var("RIMFROST_CONFIG_HOME", value),
+            None => std::env::remove_var("RIMFROST_CONFIG_HOME"),
         }
         match original_api_key {
             Some(value) => std::env::set_var("ANTHROPIC_API_KEY", value),
@@ -8988,16 +8988,16 @@ mod tests {
         let root = temp_dir();
         let cwd = root.join("project");
         let config_home = root.join("config-home");
-        std::fs::create_dir_all(cwd.join(".claw")).expect("project config dir should exist");
+        std::fs::create_dir_all(cwd.join(".rimfrost")).expect("project config dir should exist");
         std::fs::create_dir_all(&config_home).expect("config home should exist");
         std::fs::write(
-            cwd.join(".claw").join("settings.json"),
+            cwd.join(".rimfrost").join("settings.json"),
             r#"{"aliases":{"fast":"claude-haiku-4-5-20251213","smart":"opus","cheap":"grok-3-mini"}}"#,
         )
         .expect("project config should write");
 
-        let original_config_home = std::env::var("CLAW_CONFIG_HOME").ok();
-        std::env::set_var("CLAW_CONFIG_HOME", &config_home);
+        let original_config_home = std::env::var("RIMFROST_CONFIG_HOME").ok();
+        std::env::set_var("RIMFROST_CONFIG_HOME", &config_home);
 
         // when
         let direct = with_current_dir(&cwd, || resolve_model_alias_with_config("fast"));
@@ -9007,8 +9007,8 @@ mod tests {
         let builtin = with_current_dir(&cwd, || resolve_model_alias_with_config("haiku"));
 
         match original_config_home {
-            Some(value) => std::env::set_var("CLAW_CONFIG_HOME", value),
-            None => std::env::remove_var("CLAW_CONFIG_HOME"),
+            Some(value) => std::env::set_var("RIMFROST_CONFIG_HOME", value),
+            None => std::env::remove_var("RIMFROST_CONFIG_HOME"),
         }
         std::fs::remove_dir_all(root).expect("temp config root should clean up");
 
@@ -9773,7 +9773,7 @@ mod tests {
         let error = parse_args(&["/status".to_string()])
             .expect_err("/status should remain REPL-only when invoked directly");
         assert!(error.contains("interactive-only"));
-        assert!(error.contains("claw --resume SESSION.jsonl /status"));
+        assert!(error.contains("rimfrost --resume SESSION.jsonl /status"));
     }
 
     #[test]
@@ -9877,7 +9877,7 @@ mod tests {
         let error = parse_args(&["--resum".to_string()]).expect_err("unknown option should fail");
         assert!(error.contains("unknown option: --resum"));
         assert!(error.contains("Did you mean --resume?"));
-        assert!(error.contains("claw --help"));
+        assert!(error.contains("rimfrost --help"));
     }
 
     #[test]
@@ -10029,7 +10029,7 @@ mod tests {
         assert!(help.contains("/agents"));
         assert!(help.contains("/skills"));
         assert!(help.contains("/exit"));
-        assert!(help.contains("Auto-save            .claw/sessions/<session-id>.jsonl"));
+        assert!(help.contains("Auto-save            .rimfrost/sessions/<session-id>.jsonl"));
         assert!(help.contains("Resume latest        /resume latest"));
     }
 
@@ -10110,7 +10110,7 @@ mod tests {
         fs::create_dir_all(&root).expect("root dir");
         let config_home = root.join("config");
         fs::create_dir_all(&config_home).expect("config home dir");
-        std::env::set_var("CLAW_CONFIG_HOME", &config_home);
+        std::env::set_var("RIMFROST_CONFIG_HOME", &config_home);
         std::env::remove_var("ANTHROPIC_MODEL");
         std::env::set_var("ANTHROPIC_MODEL", "sonnet");
 
@@ -10119,7 +10119,7 @@ mod tests {
         assert_eq!(resolved, "claude-sonnet-4-6");
 
         std::env::remove_var("ANTHROPIC_MODEL");
-        std::env::remove_var("CLAW_CONFIG_HOME");
+        std::env::remove_var("RIMFROST_CONFIG_HOME");
         fs::remove_dir_all(root).expect("cleanup temp dir");
     }
 
@@ -10130,14 +10130,14 @@ mod tests {
         fs::create_dir_all(&root).expect("root dir");
         let config_home = root.join("config");
         fs::create_dir_all(&config_home).expect("config home dir");
-        std::env::set_var("CLAW_CONFIG_HOME", &config_home);
+        std::env::set_var("RIMFROST_CONFIG_HOME", &config_home);
         std::env::remove_var("ANTHROPIC_MODEL");
 
         let resolved = with_current_dir(&root, || resolve_repl_model(DEFAULT_MODEL.to_string()));
 
         assert_eq!(resolved, DEFAULT_MODEL);
 
-        std::env::remove_var("CLAW_CONFIG_HOME");
+        std::env::remove_var("RIMFROST_CONFIG_HOME");
         fs::remove_dir_all(root).expect("cleanup temp dir");
     }
 
@@ -10220,19 +10220,19 @@ mod tests {
         let mut help = Vec::new();
         print_help_to(&mut help).expect("help should render");
         let help = String::from_utf8(help).expect("help should be utf8");
-        assert!(help.contains("claw help"));
-        assert!(help.contains("claw version"));
-        assert!(help.contains("claw status"));
-        assert!(help.contains("claw sandbox"));
-        assert!(help.contains("claw init"));
-        assert!(help.contains("claw acp [serve]"));
-        assert!(help.contains("claw agents"));
-        assert!(help.contains("claw mcp"));
-        assert!(help.contains("claw skills"));
-        assert!(help.contains("claw /skills"));
-        assert!(help.contains("ultraworkers/claw-code"));
-        assert!(help.contains("cargo install claw-code"));
-        assert!(!help.contains("claw login"));
+        assert!(help.contains("rimfrost help"));
+        assert!(help.contains("rimfrost version"));
+        assert!(help.contains("rimfrost status"));
+        assert!(help.contains("rimfrost sandbox"));
+        assert!(help.contains("rimfrost init"));
+        assert!(help.contains("rimfrost acp [serve]"));
+        assert!(help.contains("rimfrost agents"));
+        assert!(help.contains("rimfrost mcp"));
+        assert!(help.contains("rimfrost skills"));
+        assert!(help.contains("rimfrost /skills"));
+        assert!(help.contains("Fei2-Labs/rimfrost"));
+        assert!(help.contains("cargo install rimfrost"));
+        assert!(!help.contains("rimfrost login"));
         assert!(!help.contains("claw logout"));
     }
 
@@ -10627,10 +10627,10 @@ UU conflicted.rs",
         let mut help = Vec::new();
         print_help_to(&mut help).expect("help should render");
         let help = String::from_utf8(help).expect("help should be utf8");
-        assert!(help.contains("claw --resume [SESSION.jsonl|session-id|latest]"));
+        assert!(help.contains("rimfrost --resume [SESSION.jsonl|session-id|latest]"));
         assert!(help.contains("Use `latest` with --resume, /resume, or /session switch"));
-        assert!(help.contains("claw --resume latest"));
-        assert!(help.contains("claw --resume latest /status /diff /export notes.txt"));
+        assert!(help.contains("rimfrost --resume latest"));
+        assert!(help.contains("rimfrost --resume latest /status /diff /export notes.txt"));
     }
 
     #[test]
@@ -10644,7 +10644,7 @@ UU conflicted.rs",
         let handle = create_managed_session_handle("session-alpha").expect("jsonl handle");
         assert!(handle.path.ends_with("session-alpha.jsonl"));
 
-        let legacy_path = workspace.join(".claw/sessions/legacy.json");
+        let legacy_path = workspace.join(".rimfrost/sessions/legacy.json");
         std::fs::create_dir_all(
             legacy_path
                 .parent()
@@ -10715,7 +10715,7 @@ UU conflicted.rs",
         let previous = std::env::current_dir().expect("cwd");
         std::env::set_current_dir(&workspace_b).expect("switch cwd");
 
-        let session_path = workspace_a.join(".claw/sessions/legacy-cross.jsonl");
+        let session_path = workspace_a.join(".rimfrost/sessions/legacy-cross.jsonl");
         std::fs::create_dir_all(
             session_path
                 .parent()
@@ -10772,7 +10772,7 @@ UU conflicted.rs",
     fn resume_usage_mentions_latest_shortcut() {
         let usage = render_resume_usage();
         assert!(usage.contains("/resume <session-path|session-id|latest>"));
-        assert!(usage.contains(".claw/sessions/<session-id>.jsonl"));
+        assert!(usage.contains(".rimfrost/sessions/<session-id>.jsonl"));
         assert!(usage.contains("/session list"));
     }
 

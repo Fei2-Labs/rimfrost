@@ -1,4 +1,4 @@
-Ralph Iteration Summary - claw-code Roadmap Implementation
+Ralph Iteration Summary - rimfrost Roadmap Implementation
 ===========================================================
 
 Iteration 1: 2026-04-16

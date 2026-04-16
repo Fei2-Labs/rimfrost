@@ -314,7 +314,7 @@ fn run_case(case: ScenarioCase, workspace: &HarnessWorkspace, base_url: &str) ->
         .env_clear()
         .env("ANTHROPIC_API_KEY", "test-parity-key")
         .env("ANTHROPIC_BASE_URL", base_url)
-        .env("CLAW_CONFIG_HOME", &workspace.config_home)
+        .env("RIMFROST_CONFIG_HOME", &workspace.config_home)
         .env("HOME", &workspace.home)
         .env("NO_COLOR", "1")
         .env("PATH", "/usr/bin:/bin")
@@ -367,7 +367,7 @@ fn run_case(case: ScenarioCase, workspace: &HarnessWorkspace, base_url: &str) ->
 
 #[allow(dead_code)]
 fn prepare_auto_compact_fixture(workspace: &HarnessWorkspace) {
-    let sessions_dir = workspace.root.join(".claw").join("sessions");
+    let sessions_dir = workspace.root.join(".rimfrost").join("sessions");
     fs::create_dir_all(&sessions_dir).expect("sessions dir should exist");
 
     // Write a pre-seeded session with 6 messages so auto-compact can remove them
@@ -423,7 +423,7 @@ fn prepare_plugin_fixture(workspace: &HarnessWorkspace) {
     let script_path = tool_dir.join("echo-json.sh");
     fs::write(
         &script_path,
-        "#!/bin/sh\nINPUT=$(cat)\nprintf '{\"plugin\":\"%s\",\"tool\":\"%s\",\"input\":%s}\\n' \"$CLAWD_PLUGIN_ID\" \"$CLAWD_TOOL_NAME\" \"$INPUT\"\n",
+        "#!/bin/sh\nINPUT=$(cat)\nprintf '{\"plugin\":\"%s\",\"tool\":\"%s\",\"input\":%s}\\n' \"$RIMFROSTD_PLUGIN_ID\" \"$RIMFROSTD_TOOL_NAME\" \"$INPUT\"\n",
     )
     .expect("plugin script should write");
     let mut permissions = fs::metadata(&script_path)

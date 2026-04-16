@@ -19,7 +19,7 @@ use crate::session::{Session, SessionError};
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SessionStore {
     /// Resolved root of the session namespace, e.g.
-    /// `/home/user/project/.claw/sessions/a1b2c3d4e5f60718/`.
+    /// `/home/user/project/.rimfrost/sessions/a1b2c3d4e5f60718/`.
     sessions_root: PathBuf,
     /// The canonical workspace path that was fingerprinted.
     workspace_root: PathBuf,
@@ -28,11 +28,11 @@ pub struct SessionStore {
 impl SessionStore {
     /// Build a store from the server's current working directory.
     ///
-    /// The on-disk layout becomes `<cwd>/.claw/sessions/<workspace_hash>/`.
+    /// The on-disk layout becomes `<cwd>/.rimfrost/sessions/<workspace_hash>/`.
     pub fn from_cwd(cwd: impl AsRef<Path>) -> Result<Self, SessionControlError> {
         let cwd = cwd.as_ref();
         let sessions_root = cwd
-            .join(".claw")
+            .join(".rimfrost")
             .join("sessions")
             .join(workspace_fingerprint(cwd));
         fs::create_dir_all(&sessions_root)?;
@@ -515,13 +515,13 @@ fn session_id_from_path(path: &Path) -> Option<String> {
 
 fn format_missing_session_reference(reference: &str) -> String {
     format!(
-        "session not found: {reference}\nHint: managed sessions live in .claw/sessions/. Try `{LATEST_SESSION_REFERENCE}` for the most recent session or `/session list` in the REPL."
+        "session not found: {reference}\nHint: managed sessions live in .rimfrost/sessions/. Try `{LATEST_SESSION_REFERENCE}` for the most recent session or `/session list` in the REPL."
     )
 }
 
 fn format_no_managed_sessions() -> String {
     format!(
-        "no managed sessions found in .claw/sessions/\nStart `claw` to create a session, then rerun with `--resume {LATEST_SESSION_REFERENCE}`."
+        "no managed sessions found in .rimfrost/sessions/\nStart `rimfrost` to create a session, then rerun with `--resume {LATEST_SESSION_REFERENCE}`."
     )
 }
 
@@ -834,7 +834,7 @@ mod tests {
         fs::create_dir_all(&workspace_b).expect("workspace b should exist");
 
         let store_b = SessionStore::from_cwd(&workspace_b).expect("store b should build");
-        let legacy_root = workspace_b.join(".claw").join("sessions");
+        let legacy_root = workspace_b.join(".rimfrost").join("sessions");
         fs::create_dir_all(&legacy_root).expect("legacy root should exist");
         let legacy_path = legacy_root.join("legacy-cross.jsonl");
         let session = Session::new()
@@ -866,7 +866,7 @@ mod tests {
         let base = temp_dir();
         fs::create_dir_all(&base).expect("base dir should exist");
         let store = SessionStore::from_cwd(&base).expect("store should build");
-        let legacy_root = base.join(".claw").join("sessions");
+        let legacy_root = base.join(".rimfrost").join("sessions");
         let legacy_path = legacy_root.join("legacy-safe.jsonl");
         fs::create_dir_all(&legacy_root).expect("legacy root should exist");
         let session = Session::new()
@@ -894,7 +894,7 @@ mod tests {
         let base = temp_dir();
         fs::create_dir_all(&base).expect("base dir should exist");
         let store = SessionStore::from_cwd(&base).expect("store should build");
-        let legacy_root = base.join(".claw").join("sessions");
+        let legacy_root = base.join(".rimfrost").join("sessions");
         let legacy_path = legacy_root.join("legacy-unbound.json");
         fs::create_dir_all(&legacy_root).expect("legacy root should exist");
         let session = Session::new().with_persistence_path(legacy_path.clone());
