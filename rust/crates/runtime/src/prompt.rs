@@ -501,6 +501,9 @@ fn get_simple_doing_tasks_section() -> String {
         "If an approach fails, diagnose the failure before switching tactics.".to_string(),
         "Be careful not to introduce security vulnerabilities such as command injection, XSS, or SQL injection.".to_string(),
         "Report outcomes faithfully: if verification fails or was not run, say so explicitly.".to_string(),
+        "On first failure: read the error output carefully and understand the root cause before retrying.".to_string(),
+        "On second failure: probe the environment (check file state, dependencies, versions) to gather new information.".to_string(),
+        "On third failure: step back, analyze what you have learned, and switch to a fundamentally different approach — or ask the user. Never repeat the same action without new information.".to_string(),
     ]);
 
     std::iter::once("# Doing tasks".to_string())
