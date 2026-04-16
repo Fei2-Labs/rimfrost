@@ -102,6 +102,9 @@ pub struct Session {
     /// Timestamp of last successful health check (ROADMAP #38)
     pub last_health_check_ms: Option<u64>,
     pub model: Option<String>,
+    /// Short-term working memory scratchpad. Updated by the WorkingCheckpoint
+    /// tool and injected into every subsequent turn to prevent context drift.
+    pub working_checkpoint: Option<String>,
     persistence: Option<SessionPersistence>,
 }
 
@@ -117,6 +120,7 @@ impl PartialEq for Session {
             && self.workspace_root == other.workspace_root
             && self.prompt_history == other.prompt_history
             && self.last_health_check_ms == other.last_health_check_ms
+            && self.working_checkpoint == other.working_checkpoint
     }
 }
 
@@ -170,6 +174,7 @@ impl Session {
             prompt_history: Vec::new(),
             last_health_check_ms: None,
             model: None,
+            working_checkpoint: None,
             persistence: None,
         }
     }
@@ -243,7 +248,13 @@ impl Session {
     }
 
     pub fn push_user_text(&mut self, text: impl Into<String>) -> Result<(), SessionError> {
-        self.push_message(ConversationMessage::user_text(text))
+        let text = text.into();
+        let augmented = if let Some(checkpoint) = &self.working_checkpoint {
+            format!("<system-reminder>Working memory checkpoint:\n{checkpoint}\n</system-reminder>\n\n{text}")
+        } else {
+            text
+        };
+        self.push_message(ConversationMessage::user_text(augmented))
     }
 
     pub fn record_compaction(&mut self, summary: impl Into<String>, removed_message_count: usize) {
@@ -274,6 +285,7 @@ impl Session {
             prompt_history: self.prompt_history.clone(),
             last_health_check_ms: self.last_health_check_ms,
             model: self.model.clone(),
+            working_checkpoint: self.working_checkpoint.clone(),
             persistence: None,
         }
     }
@@ -327,6 +339,9 @@ impl Session {
                         .collect(),
                 ),
             );
+        }
+        if let Some(checkpoint) = &self.working_checkpoint {
+            object.insert("working_checkpoint".to_string(), JsonValue::String(checkpoint.clone()));
         }
         Ok(JsonValue::Object(object))
     }
@@ -386,6 +401,10 @@ impl Session {
             .get("model")
             .and_then(JsonValue::as_str)
             .map(String::from);
+        let working_checkpoint = object
+            .get("working_checkpoint")
+            .and_then(JsonValue::as_str)
+            .map(String::from);
         Ok(Self {
             version,
             session_id,
@@ -398,6 +417,7 @@ impl Session {
             prompt_history,
             last_health_check_ms: None,
             model,
+            working_checkpoint,
             persistence: None,
         })
     }
@@ -412,6 +432,7 @@ impl Session {
         let mut fork = None;
         let mut workspace_root = None;
         let mut model = None;
+        let mut working_checkpoint = None;
         let mut prompt_history = Vec::new();
 
         for (line_number, raw_line) in contents.lines().enumerate() {
@@ -453,6 +474,10 @@ impl Session {
                         .map(PathBuf::from);
                     model = object
                         .get("model")
+                        .and_then(JsonValue::as_str)
+                        .map(String::from);
+                    working_checkpoint = object
+                        .get("working_checkpoint")
                         .and_then(JsonValue::as_str)
                         .map(String::from);
                 }
@@ -499,6 +524,7 @@ impl Session {
             prompt_history,
             last_health_check_ms: None,
             model,
+            working_checkpoint,
             persistence: None,
         })
     }
@@ -606,6 +632,9 @@ impl Session {
         }
         if let Some(model) = &self.model {
             object.insert("model".to_string(), JsonValue::String(model.clone()));
+        }
+        if let Some(checkpoint) = &self.working_checkpoint {
+            object.insert("working_checkpoint".to_string(), JsonValue::String(checkpoint.clone()));
         }
         Ok(JsonValue::Object(object))
     }

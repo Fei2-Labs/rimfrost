@@ -452,6 +452,15 @@ where
                                 Ok(output) => (output, false),
                                 Err(error) => (error.to_string(), true),
                             };
+
+                        // Intercept WorkingCheckpoint to persist on session
+                        if tool_name == "WorkingCheckpoint" && !is_error {
+                            if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&effective_input) {
+                                if let Some(key_info) = parsed.get("key_info").and_then(|v| v.as_str()) {
+                                    self.session.working_checkpoint = Some(key_info.to_string());
+                                }
+                            }
+                        }
                         output = merge_hook_feedback(pre_hook_result.messages(), output, false);
 
                         let post_hook_result = if is_error {

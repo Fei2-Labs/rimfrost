@@ -630,6 +630,19 @@ pub fn mvp_tool_specs() -> Vec<ToolSpec> {
             required_permission: PermissionMode::ReadOnly,
         },
         ToolSpec {
+            name: "WorkingCheckpoint",
+            description: "Update the working memory scratchpad for this session. Content is injected into every subsequent turn to prevent context drift during long tasks. Use when: (1) starting a complex multi-step task, (2) before switching subtasks, (3) after failures to record what you learned. Keep under 200 tokens.",
+            input_schema: json!({
+                "type": "object",
+                "properties": {
+                    "key_info": { "type": "string", "description": "Compressed state: current goal, key findings, pitfalls, file paths, progress, next steps." }
+                },
+                "required": ["key_info"],
+                "additionalProperties": false
+            }),
+            required_permission: PermissionMode::ReadOnly,
+        },
+        ToolSpec {
             name: "SendUserMessage",
             description: "Send a message to the user.",
             input_schema: json!({
@@ -1231,6 +1244,7 @@ fn execute_tool_with_enforcer(
         "ToolSearch" => from_value::<ToolSearchInput>(input).and_then(run_tool_search),
         "NotebookEdit" => from_value::<NotebookEditInput>(input).and_then(run_notebook_edit),
         "Sleep" => from_value::<SleepInput>(input).and_then(run_sleep),
+        "WorkingCheckpoint" => from_value::<WorkingCheckpointInput>(input).and_then(run_working_checkpoint),
         "SendUserMessage" | "Brief" => from_value::<BriefInput>(input).and_then(run_brief),
         "Config" => from_value::<ConfigInput>(input).and_then(run_config),
         "EnterPlanMode" => from_value::<EnterPlanModeInput>(input).and_then(run_enter_plan_mode),
@@ -2126,6 +2140,18 @@ fn run_sleep(input: SleepInput) -> Result<String, String> {
     to_pretty_json(execute_sleep(input)?)
 }
 
+fn run_working_checkpoint(input: WorkingCheckpointInput) -> Result<String, String> {
+    // The actual session update happens in the CLI layer which has access to
+    // the Session. This tool returns the acknowledged content so the runtime
+    // can extract and persist it.
+    let truncated = if input.key_info.len() > 1000 {
+        format!("{}...[truncated]", &input.key_info[..1000])
+    } else {
+        input.key_info
+    };
+    Ok(format!("{{\"status\":\"updated\",\"working_checkpoint\":{}}}", serde_json::to_string(&truncated).unwrap_or_default()))
+}
+
 fn run_brief(input: BriefInput) -> Result<String, String> {
     to_pretty_json(execute_brief(input)?)
 }
@@ -2344,6 +2370,11 @@ enum NotebookEditMode {
 #[derive(Debug, Deserialize)]
 struct SleepInput {
     duration_ms: u64,
+}
+
+#[derive(Debug, Deserialize)]
+struct WorkingCheckpointInput {
+    key_info: String,
 }
 
 #[derive(Debug, Deserialize)]
