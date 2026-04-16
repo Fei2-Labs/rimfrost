@@ -643,6 +643,36 @@ pub fn mvp_tool_specs() -> Vec<ToolSpec> {
             required_permission: PermissionMode::ReadOnly,
         },
         ToolSpec {
+            name: "MemoryWrite",
+            description: "Save a learning, fact, or SOP to long-term memory. Loaded into future sessions automatically. Use when: discovering environment facts, user preferences, reusable procedures, or lessons from failures.",
+            input_schema: json!({
+                "type": "object",
+                "properties": {
+                    "scope": { "type": "string", "enum": ["user", "project"] },
+                    "category": { "type": "string", "enum": ["fact", "preference", "skill"] },
+                    "title": { "type": "string" },
+                    "content": { "type": "string" }
+                },
+                "required": ["scope", "category", "title", "content"],
+                "additionalProperties": false
+            }),
+            required_permission: PermissionMode::WorkspaceWrite,
+        },
+        ToolSpec {
+            name: "MemoryRead",
+            description: "Search long-term memory for relevant learnings, facts, or SOPs.",
+            input_schema: json!({
+                "type": "object",
+                "properties": {
+                    "query": { "type": "string" },
+                    "scope": { "type": "string", "enum": ["user", "project", "all"] }
+                },
+                "required": ["query"],
+                "additionalProperties": false
+            }),
+            required_permission: PermissionMode::ReadOnly,
+        },
+        ToolSpec {
             name: "SendUserMessage",
             description: "Send a message to the user.",
             input_schema: json!({
@@ -1245,6 +1275,8 @@ fn execute_tool_with_enforcer(
         "NotebookEdit" => from_value::<NotebookEditInput>(input).and_then(run_notebook_edit),
         "Sleep" => from_value::<SleepInput>(input).and_then(run_sleep),
         "WorkingCheckpoint" => from_value::<WorkingCheckpointInput>(input).and_then(run_working_checkpoint),
+        "MemoryWrite" => from_value::<MemoryWriteInput>(input).and_then(run_memory_write),
+        "MemoryRead" => from_value::<MemoryReadInput>(input).and_then(run_memory_read),
         "SendUserMessage" | "Brief" => from_value::<BriefInput>(input).and_then(run_brief),
         "Config" => from_value::<ConfigInput>(input).and_then(run_config),
         "EnterPlanMode" => from_value::<EnterPlanModeInput>(input).and_then(run_enter_plan_mode),
@@ -2152,6 +2184,16 @@ fn run_working_checkpoint(input: WorkingCheckpointInput) -> Result<String, Strin
     Ok(format!("{{\"status\":\"updated\",\"working_checkpoint\":{}}}", serde_json::to_string(&truncated).unwrap_or_default()))
 }
 
+fn run_memory_write(input: MemoryWriteInput) -> Result<String, String> {
+    let cwd = std::env::current_dir().map_err(|e| e.to_string())?;
+    runtime::memory::write_memory(&cwd, &input.scope, &input.category, &input.title, &input.content)
+}
+
+fn run_memory_read(input: MemoryReadInput) -> Result<String, String> {
+    let cwd = std::env::current_dir().map_err(|e| e.to_string())?;
+    runtime::memory::search_memory(&cwd, &input.query, input.scope.as_deref().unwrap_or("all"))
+}
+
 fn run_brief(input: BriefInput) -> Result<String, String> {
     to_pretty_json(execute_brief(input)?)
 }
@@ -2375,6 +2417,20 @@ struct SleepInput {
 #[derive(Debug, Deserialize)]
 struct WorkingCheckpointInput {
     key_info: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct MemoryWriteInput {
+    scope: String,
+    category: String,
+    title: String,
+    content: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct MemoryReadInput {
+    query: String,
+    scope: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

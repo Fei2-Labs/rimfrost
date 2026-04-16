@@ -157,6 +157,10 @@ impl SystemPromptBuilder {
             if !project_context.instruction_files.is_empty() {
                 sections.push(render_instruction_files(&project_context.instruction_files));
             }
+            // Inject long-term memory from ~/.rimfrost/memory/ and .rimfrost/memory/
+            if let Some(memory_section) = crate::memory::load_memory_section(&project_context.cwd) {
+                sections.push(memory_section);
+            }
         }
         if let Some(config) = &self.config {
             sections.push(render_config_section(config));
